@@ -38,7 +38,7 @@ Java内存模型：
 
 ​		![微信图片_20171218165856](C:\Users\zhangjiachen\Pictures\微信图片_20171218165856.png) 
 
-![微信图片_20171218165903](C:\Users\zhangjiachen\Pictures\微信图片_20171218165903.png)
+![1](C:\Users\zhangjiachen\Pictures\微信图片_20171218165903.png)
 
 ![微信图片_20171218165911](C:\Users\zhangjiachen\Pictures\微信图片_20171218165911.png)
 
