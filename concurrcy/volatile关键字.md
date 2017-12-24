@@ -87,6 +87,10 @@ Java内存模型：
 
 **"同步锁虽然可以保证线程安全，但是对程序性能的影响太大了，有一种轻量级的解决方法，也就是我们的主角[volatile]。"**
 
+***
+
+#### 三.volatile介绍
+
 ​	volatile关键字具有许多特性，其中最重要的特性就是保证了用volatile修饰的变量对所有线程的**可见性**。即当一个线程修改了变量的值，新的值会立刻同步到**主内存**中。而其它线程读取这个变量的时候，也会从主内存中立刻读取到**最新的变量值**。
 
 ​	为什么volatile关键字可以有这样的特性?这得益于java语言的**先行发生原则(happens-before)**。先行发生原则在维基百科上的定义如下：
@@ -113,9 +117,9 @@ Java内存模型：
 
 ***
 
-#### volatile性质
+#### 四.volatile性质
 
-volatile只能保证变量的可见性，并不能保证变量的原子性
+**volatile只能保证变量的可见性，并不能保证变量的原子性，因此不是线程安全的，我们来看下面的例子**
 
 ```java
 public class VolatileTest{
@@ -153,13 +157,12 @@ public class VolatileTest{
 
 ​	使用volatile修饰的变量，为什么并发自增的时候会出现这样的问题呢？这是因为count++这一行代码本身不是原子性操作，在字节码层面可以拆分成如下指令：
 
-​	`getstatic		//读取静态变量(count)	`
-
-​	`iconst 1		//定义常量1`							
-
-​	`iadd		//count增加1`	
-
-​	`putstatic		//把count结果同步到主内存`		
+```assembly
+getstatic		//读取静态变量(count)	
+iconst 1		//定义常量1						
+iadd		//count增加1
+putstatic		//把count结果同步到主内存
+```
 
 ​	虽然每一次执行getstatic的时候，获取到的都是主内存的最新变量值，但是进行iadd的时候，由于并不是原子性操作，其他线程在这过程中很可能让count自增了很多次。这样一来线程所计算更新的是一个**陈旧的**count值，自然无法做到线程安全：
 
@@ -193,6 +196,8 @@ public class VolatileTest{
    end+=3;
    ```
 
-   这种情况下，一旦在线程A的循环条件判断中执行了线程B，start有可能先更新为6，造成一瞬间`start == end` ，从而跳出while循环的可能性。
+   ​	这种情况下，一旦在线程A的循环条件判断中执行了线程B，start有可能先更新为6，造成一瞬间`start == end` ，从而跳出while循环的可能性。
 
-   ​
+***
+
+#### 五.volatile指令重排
