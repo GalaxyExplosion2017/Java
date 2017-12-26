@@ -10,7 +10,7 @@ typora-copy-images-to: ..\raw
 
 #### 一.JMM（java内存模型）
 
-Java内存模型简称**JMM**(Java Memory Model)，是Java虚拟机所定义的一种抽象规范，用来屏蔽不同硬件和操作系统的内存访问差异，让java程序在各种平台下都能达到一致的内存访问效果。
+​	Java内存模型简称**JMM**(Java Memory Model)，是Java虚拟机所定义的一种抽象规范，用来屏蔽不同硬件和操作系统的内存访问差异，让java程序在各种平台下都能达到一致的内存访问效果。
 
 
 
@@ -85,9 +85,9 @@ Java内存模型：
 
 ​	因为工作内存所更新的变量并不会立即同步到主内存，所有虽然线程A在自己的工作内存当中已经把变量s的值更新成3，但是线程B从主内存得到的变量值任然是0，从而输出`s = 0`。
 
-**"怎么才能解决这个问题？是不是要使用synchronized关键字？"**
+**--怎么才能解决这个问题？是不是要使用synchronized关键字？**
 
-**"同步锁虽然可以保证线程安全，但是对程序性能的影响太大了，有一种轻量级的解决方法，也就是我们的主角[volatile]。"**
+**--同步锁虽然可以保证线程安全，但是对程序性能的影响太大了，有一种轻量级的解决方法，也就是我们的主角[volatile]。**
 
 ***
 
@@ -97,15 +97,15 @@ Java内存模型：
 
 ​	为什么volatile关键字可以有这样的特性?这得益于java语言的**先行发生原则(happens-before)**。先行发生原则在维基百科上的定义如下：
 
-> In computer science, the happened-before relation is a relation between the result of two events, such that if one event should happen before another event, the result must reflect that, even if those events are in reality executed out of order (usually to optimize program flow). 
+> ​	In computer science, the happened-before relation is a relation between the result of two events, such that if one event should happen before another event, the result must reflect that, even if those events are in reality executed out of order (usually to optimize program flow). 
 
 ​	翻译结果如下:
 
 ​	在计算机科学中，先行发生原则是两个事件的结果之间的关系，如果一个事件发生在另一个事件之前，结果必须反映，即使这些事件实际上是**乱序**执行的(通常是优化程序流程)。
 
-​	这里所谓的事件，实际上就是各种指令操作，比如读操作、写操作、初始化操作、锁操作等等。
+​	这里所谓的**事件**，实际上就是各种**指令操作**，比如**读操作、写操作、初始化操作、锁操作**等等。
 
-​	先行发生原则作用于很多场景下，包括同步锁、线程启动、线程终止、volatile。我们这里只列举volatile相关的原则：
+​	先行发生原则作用于很多场景下，包括**同步锁、线程启动、线程终止、volatile**。我们这里只列举volatile相关的原则：
 
 > 对于一个volatile变量的写操作先行发生于后面对这个变量的读操作。
 
@@ -206,9 +206,9 @@ putstatic		//把count结果同步到主内存
 
 * ##### 什么是指令重排？
 
-  ​	指令重排是指JVM在编译java代码时，或者CPU在执行JVM字节码的时候，对现有的指令顺序进行重新排序。
+  ​	指令重排是指JVM在编译java代码时，或者CPU在执行JVM字节码的时候，**对现有的指令顺序进行重新排序**。
 
-  ​	指令重排的目的是为了在不改变程序执行结果的前提下，优化程序的运行效率。需要注意的是，这里所说的不改变程序的执行结果，指的是不改变单线程下的程序执行结果。
+  ​	**指令重排的目的是为了在不改变程序执行结果的前提下，优化程序的运行效率**。需要注意的是，这里所说的不改变程序的执行结果，指的是不改变单线程下的程序执行结果。
 
   ​	然而，指令重排是一把双刃剑，虽然优化了程序的执行效率，但是在某些情况下，会影响到多线程的执行结果。我们来看看下面的例子：
 
@@ -237,7 +237,7 @@ putstatic		//把count结果同步到主内存
   但是，如果线程A执行的代码发生了指令重排，初始化和contextReady的赋值交换了顺序：
 
   ```java
-
+  boolean contextReady = false;
   ```
 
   在线程A中执行：
@@ -361,7 +361,7 @@ putstatic		//把count结果同步到主内存
 
   ​	阻止编译时和运行时的指令重排。编译时JVM编译器遵循内存屏障的约束，运行时依靠CPU屏障指令来阻止指令重排
 
-***
+
 
 ##### 几点补充：
 
