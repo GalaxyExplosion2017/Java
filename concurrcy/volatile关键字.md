@@ -6,6 +6,8 @@ typora-copy-images-to: ..\raw
 
 ## volatile关键字
 
+[TOC]
+
 #### 一.JMM（java内存模型）
 
 Java内存模型简称**JMM**(Java Memory Model)，是Java虚拟机所定义的一种抽象规范，用来屏蔽不同硬件和操作系统的内存访问差异，让java程序在各种平台下都能达到一致的内存访问效果。
@@ -119,7 +121,7 @@ Java内存模型：
 
 #### 四.volatile性质
 
-**volatile只能保证变量的可见性，并不能保证变量的原子性，因此不是线程安全的，我们来看下面的例子**
+​	**volatile只能保证变量的可见性，并不能保证变量的原子性，因此不是线程安全的，我们来看下面的例子**
 
 ```java
 public class VolatileTest{
@@ -180,7 +182,7 @@ putstatic		//把count结果同步到主内存
 
 2. **变量不需要与其他状态的变量通过参与不变的约束。**
 
-   第一条很好理解，就是上面的代码例子。第二条可以看看下面这个场景：
+   ​	第一条很好理解，就是上面的代码例子。第二条可以看看下面这个场景：
 
    ```java
    volatile static int start = 3;
@@ -202,12 +204,166 @@ putstatic		//把count结果同步到主内存
 
 #### 五.volatile对指令重排的影响
 
-* 什么是指令重排？
+* ##### 什么是指令重排？
 
-  指令重排是指JVM在编译java代码时，或者CPU在执行JVM字节码的时候，对现有的指令顺序进行重新排序。
+  ​	指令重排是指JVM在编译java代码时，或者CPU在执行JVM字节码的时候，对现有的指令顺序进行重新排序。
 
-  指令重排的目的是为了在不改变程序执行结果的前提下，优化程序的运行效率。需要注意的是，这里所说的不改变程序的执行结果，指的是不改变单线程下的程序执行结果。
+  ​	指令重排的目的是为了在不改变程序执行结果的前提下，优化程序的运行效率。需要注意的是，这里所说的不改变程序的执行结果，指的是不改变单线程下的程序执行结果。
 
-  然而，指令重排是一把双刃剑，虽然优化了程序的执行效率，但是在某些情况下，会影响到多线程的执行结果。我们来看看下面的例子：
+  ​	然而，指令重排是一把双刃剑，虽然优化了程序的执行效率，但是在某些情况下，会影响到多线程的执行结果。我们来看看下面的例子：
+
+  ```java
+  boolean contextReady = false;
+  ```
+
+  在线程A中执行：
+
+  ```java
+  context = loadContext();
+  contextReady = true;
+  ```
+
+  在线程B中执行：
+
+  ```java
+  while(!contextReady){
+    sleep(200);
+  }
+  doAfterContextReady(context);
+  ```
+
+  ​	以上程序看似没问题。线程B循环等待着上下文context的加载，一旦context加载完成，contextReady == true的时候，才执行doAfterContextReady方法。
+
+  但是，如果线程A执行的代码发生了指令重排，初始化和contextReady的赋值交换了顺序：
+
+  ```java
+
+  ```
+
+  在线程A中执行：
+
+  ```java
+  contextReady = true;
+  context = loadContext();
+  ```
+
+  在线程B中执行：
+
+  ```java
+  while(!contextReady){
+  	sleep(200);
+  }
+  doAfterContextReady(context);
+  ```
+
+  ​	这个时候，很可能context对象还没有加载完，变量contextReady已经变为true，线程B直接跳出了循环等待，开始执行doAfterContextReady方法，结果自然会出现错误。
+
+  需要注意的是，这里java代码的重排只是为了简单示意，真正的指令重排实在字节码指令的层面。
 
   ​
+
+  --那么讨厌的指令重排该如何解决呢？
+
+  --有一个法宝可以解决问题，这法宝叫做[ 内存屏障 ]。
+
+  ​
+
+* ##### 什么是内存屏障？
+
+  ​	内存屏障(Memory Barrier)是一种CPU指令，维基百科给出了如下定义：
+
+  > A Memory Barrier,also known as a member,memory fence or fence instruction,is a type of barrier instruction that causes a CPU or compiler to enforce an ordering constraint on memory operations issued before an after the barrier instruction.This typically means that operations issued prior to the barrier are guaranteed to be performed before operation issued after the barrier.
+
+  翻译结果如下：
+
+  ​	内存屏障也称为内存栅栏或栅栏指令，是一种屏障指令，它使CPU或编译器对屏障指令之前和之后发出的内存操作执行一个排序约束。这通常意味着在屏障之前发布的操作被保证在屏障之后发布的操作之前执行。
+
+  内存屏障共分为四种类型：
+
+  * **LoadLoad屏障**：
+
+    抽象场景：Load1；LoadLoad；Load2
+
+    Load1和Load2代表两条读取指令。在Load2要读取的数据被访问前，保证Load1要读取的数据被读取完毕。
+
+  * **StoreStore屏障**
+
+    抽象场景：Store1；StoreStore；Store2
+
+    Store1和Store2代表两条写入指令。在Store写入执行前，保证Store1的写入操作对其它处理器可见
+
+  * **LoadStore屏障**
+
+    抽象场景：Load1；LoadStore；Store2
+
+    在Store2被写入前，保证Load1要读取的数据被读取完毕。
+
+  * **StoreLoad屏障**
+
+    抽象场景：Store1；StoreLoad；Load2
+
+    在Load2读取操作执行前，保证Store1的写入对所有处理器可见。StoreLoad屏障的开销是四种屏障中最大的。
+
+* ##### volatile做了什么？
+
+  在一个变量被volatile修饰后，JVM会为我们做两件事：
+
+  1. 在每一个volatile写操作前插入StoreStore屏障，在写操作后插入StoreLoad屏障。
+  2. 在每一个volatile读操作前插入LoadLoad屏障，在读操作后插入LoadStore屏障。
+
+  或许这样说有些抽象，我们看一看刚才线程A代码的例子：
+
+  ```java 
+  boolean contextReady = false;
+  ```
+
+  在线程A中执行：
+
+  ```java
+  context = loadContext();
+  contextRead = true;
+  ```
+
+  ​
+
+  我们给contextReady增加volatile修饰符，会带来什么效果呢？
+
+  ```java
+  volatile boolean contextReady = false;
+  ```
+
+  在线程A找那个执行：
+
+  ```java
+  context = loadContext();
+  /*StoreStore屏障*/
+  contextReady = true;
+  /*StoreLoad屏障*/
+  ```
+
+  由于加入了`StoreStore`屏障，屏障上方的普通写入语句`context = loadContext()` 和屏障下方的`volatile`写入语句`contextReady = true`，从而成功组织了指令重排。
+
+  ![微信图片_20171226225151](../raw/微信图片_20171226225151.jpg)
+
+  --那么内存屏障和java语言的happens-before规则之间是什么样的关系呢？
+
+  --happens-before是JSR-133规范之一，内存屏障是CPU指令。可以简单认为前者是最终目的，后者是实现手段。
+
+***
+
+#### 六.总结
+
+* ##### volatile特性之一：
+
+  ​	保证变量在线程之间的可见性。可见性的保证是基于CPU的内存屏障指令，被JSR-133抽象为happens-before原则。
+
+* ##### volatile特效之二：
+
+  ​	阻止编译时和运行时的指令重排。编译时JVM编译器遵循内存屏障的约束，运行时依靠CPU屏障指令来阻止指令重排
+
+***
+
+##### 几点补充：
+
+1. 在使用volatile引入内存屏障的时候，普通度、普通写、volatile读、volatile写会排列组合出许多不同的场景。
+2. volatile除了保证了可见性和阻止指令重排之外，还解决了long类型和double类型数据的**8字节赋值问题**。
