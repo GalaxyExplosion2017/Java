@@ -159,7 +159,7 @@ typora-copy-images-to: ..\raw
 
 ​	衡量HashMap是否需要进行Resize的条件如下：
 
- **HashMap.Size >=  Capacity \* LoadFactor **
+ 	**HashMap.Size >=  Capacity ** ***** **LoadFactor **
 
 
 
