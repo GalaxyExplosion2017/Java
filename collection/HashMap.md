@@ -342,6 +342,6 @@ void transfer(Entry[] newTable, boolean rehash){
 
 #### 总结
 
-1. **HashMap在插入元素过多的时候需要进行Resize，Resize的条件是： HashMap.Size >= Capacity \* LoadFactor。 **
+1. **HashMap在插入元素过多的时候需要进行Resize，Resize的条件是： HashMap.Size >= Capacity \* LoadFactor.**
 2. **HashMap的Resize包含扩容和ReHash两个步骤，ReHash在并发情况下可能会形成链表环。**
 
