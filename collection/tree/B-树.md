@@ -1,6 +1,5 @@
 ---
 typora-copy-images-to: ..\raw
-typora-root-url: ..\raw
 ---
 
 ## B-树
